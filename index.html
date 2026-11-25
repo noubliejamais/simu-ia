@@ -1,0 +1,1280 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atelier — Créer un scénario de simulation avec l'IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Varela+Round&display=swap" rel="stylesheet">
+<style>
+  /* Jetons du design system N'oublie Jamais (site, relevé du 22/10/2026). */
+  :root {
+    --bg: #ffffff;
+    --ink: #000000;
+    --text: #4b4f58;
+    --slate: #4d5c6d;
+    --gray: #a3a5a9;
+    --nj-blue: #0343e5;
+    --nj-violet: #4632da;
+    --nj-indigo: #5010e1;
+    --nj-cyan: #29e7fc;
+    --nj-navy: #011640;
+    --nj-pink: #f01b59;
+    --nj-tint-cyan: #edfbff;
+    --nj-tint-violet: #f6f3fd;
+    --nj-ultramarine: #0700dd;
+    --nj-aqua: #00f2ff;
+    --font-display: "Varela Round", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-sans: Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-hero: Helvetica, "Helvetica Neue", Arial, sans-serif;
+    --radius-xs: 4px;
+    --radius-md: 10px;
+    --radius-card: 12px;
+    --radius-panel: 30px;
+    --space-panel: 20px;
+    --acc: var(--nj-blue);
+    --acc-text: var(--nj-blue);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--ink);
+    background: var(--bg);
+    padding-bottom: 104px; /* place pour le chrono et le dé fixés en bas */
+  }
+  .violet { --acc: var(--nj-indigo); --acc-text: var(--nj-violet); }
+
+  /* En-tête */
+  .entete { max-width: 720px; margin: 0 auto; padding: 14px 16px 6px; }
+  .entete .logo { display: block; width: 168px; height: auto; margin: 0 0 6px -8px; }
+  .eyebrow {
+    font-family: var(--font-sans); font-size: 15px; line-height: 24px; font-weight: 400;
+    text-transform: uppercase; letter-spacing: .04em; color: var(--acc); margin: 0 0 6px;
+  }
+  h1 {
+    font-family: var(--font-hero); font-weight: 600; color: var(--ink);
+    font-size: 31px; line-height: 35px; margin: 0 0 10px;
+  }
+  .lead { font-family: var(--font-hero); font-size: 19px; line-height: 25px; margin: 0 0 8px; color: var(--ink); }
+
+  main { max-width: 720px; margin: 0 auto; padding: 0 16px; }
+  .panneau { border-radius: var(--radius-panel); padding: var(--space-panel); margin: 20px 0; }
+  .panneau.cyan { background: var(--nj-tint-cyan); }
+  .panneau.violet { background: var(--nj-tint-violet); }
+  .panneau.blanc { padding-left: 0; padding-right: 0; }
+  h2 {
+    font-family: var(--font-display); font-weight: 600; color: var(--ink);
+    font-size: 25px; line-height: 30px; margin: 0 0 10px;
+  }
+  h3 {
+    font-family: var(--font-display); font-weight: 700; color: var(--acc-text);
+    font-size: 19px; line-height: 25px; margin: 0;
+  }
+  p { margin: 0 0 12px; }
+  .aide { color: var(--text); font-size: 16px; margin: 6px 0 12px; }
+  .carte {
+    background: var(--bg); border-radius: var(--radius-card); padding: 16px; margin: 12px 0;
+  }
+  .blanc .carte, .carte.bord { border: 2px solid var(--nj-tint-cyan); }
+  ul.court { margin: 6px 0 12px; padding-left: 20px; }
+  ul.court li { margin: 5px 0; }
+
+  /* Boutons */
+  button, a.bouton {
+    font-family: var(--font-sans); font-size: 16px; font-weight: 700; line-height: 1.15;
+    border: 0; border-radius: var(--radius-xs);
+    padding: 15px 18px; min-height: 50px; width: 100%;
+    display: block; text-align: center; text-decoration: none; cursor: pointer;
+    background: var(--acc); color: var(--bg);
+  }
+  button:active, a.bouton:active { filter: brightness(1.15); }
+  button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid var(--nj-cyan); outline-offset: 2px; }
+  button.secondaire, a.secondaire {
+    background: transparent; color: var(--nj-blue);
+    border: 2px solid var(--nj-blue); border-radius: var(--radius-md);
+    font-family: var(--font-hero); font-weight: 600; padding: 13px 16px;
+  }
+  button.fait { background: var(--nj-navy); color: var(--bg); border-color: var(--nj-navy); }
+  button:disabled { opacity: .45; cursor: default; }
+  .liens { display: grid; gap: 10px; }
+  details { margin-top: 10px; }
+  summary { cursor: pointer; color: var(--nj-blue); font-weight: 700; padding: 8px 0; }
+
+  /* Briefing */
+  .recit { font-family: var(--font-hero); font-size: 18px; line-height: 26px; }
+  .cadre { border-left: 4px solid var(--nj-blue); padding-left: 12px; color: var(--ink); }
+
+  /* Cadenas */
+  .compteur { display: flex; align-items: center; gap: 8px; color: var(--text); font-weight: 700; margin: 0 0 6px; }
+  .compteur .icones { display: inline-flex; gap: 4px; }
+  .cadenas { flex: none; width: 34px; height: 34px; color: var(--gray); display: inline-flex; }
+  .cadenas svg { width: 100%; height: 100%; }
+  .compteur .cadenas { width: 22px; height: 22px; }
+  .ouvert > .verrou-tete .cadenas, .cadenas.ouvert { color: var(--nj-blue); }
+  .verrou-tete { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .verrou.ouvert { border-color: var(--nj-blue); }
+  .verrou.urgent { border-color: var(--nj-pink); }
+  .verrou .fait-btn { margin-top: 12px; }
+  .accomplie {
+    background: var(--nj-navy); color: var(--bg); border-radius: var(--radius-card);
+    padding: 16px; margin: 12px 0; font-family: var(--font-display); font-size: 20px; text-align: center;
+  }
+  .accomplie span { color: var(--nj-cyan); }
+
+  /* Tirage : la commande */
+  .cartes { display: grid; gap: 10px; margin: 12px 0; }
+  .carte-tirage {
+    border: 2px solid var(--nj-blue); border-radius: var(--radius-card);
+    padding: 10px 12px; background: var(--bg); text-align: left; color: var(--ink);
+    font-weight: 400; min-height: 66px; font-family: var(--font-sans);
+  }
+  .carte-tirage .famille {
+    display: block; font-size: 13px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--nj-blue);
+  }
+  .carte-tirage .valeur { display: block; font-size: 18px; font-weight: 700; line-height: 1.3; }
+  .carte-tirage .ancrage { display: block; font-size: 13px; color: var(--text); margin-top: 2px; }
+  .carte-tirage.vide { border-style: dashed; border-color: var(--gray); }
+  .carte-tirage.vide .valeur { color: var(--text); font-weight: 400; }
+  .carte-tirage.roule { border-color: var(--nj-pink); }
+  .relances { font-size: 15px; color: var(--text); margin: 8px 0 0; }
+
+  /* Consignes à copier */
+  .consigne {
+    border-left: 4px solid var(--nj-blue); background: var(--nj-tint-cyan);
+    border-radius: 0 var(--radius-card) var(--radius-card) 0;
+    padding: 12px; margin: 10px 0; white-space: pre-wrap; font-size: 15px;
+    max-height: 190px; overflow: auto;
+  }
+  .alerte {
+    border: 2px solid var(--nj-pink); border-radius: var(--radius-card);
+    padding: 10px 12px; font-size: 15px; margin: 10px 0; color: var(--ink);
+  }
+  .bloc-consigne { margin: 10px 0; }
+  .bloc-consigne details { margin-top: 2px; }
+  .bloc-consigne summary { font-weight: 400; font-size: 15px; padding: 6px 0; }
+  .mot-cle {
+    font-family: var(--font-display); font-size: 30px; letter-spacing: .1em; text-align: center;
+    color: var(--nj-blue); border: 2px dashed var(--nj-blue); border-radius: var(--radius-card);
+    padding: 8px; margin: 8px 0; background: var(--bg);
+  }
+
+  /* Évaluation avant / après */
+  .curseur { margin: 14px 0; }
+  .curseur label { display: block; font-weight: 700; font-size: 16px; }
+  .ligne-curseur { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+  .ligne-curseur input[type=range] { flex: 1; min-width: 0; height: 44px; margin: 0; accent-color: var(--acc); }
+  .valeur-curseur {
+    flex: none; width: 46px; height: 46px; border-radius: var(--radius-card);
+    background: var(--bg); color: var(--acc); border: 2px solid var(--acc);
+    font-weight: 900; font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .echelle { display: flex; justify-content: space-between; font-size: 13px; color: var(--text); margin-right: 58px; }
+  .ligne-progres {
+    background: var(--bg); border-radius: var(--radius-card); padding: 10px 12px; margin: 8px 0;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .ligne-progres .quoi { flex: 1; font-size: 15px; }
+  .ligne-progres .chiffres { flex: none; font-weight: 700; white-space: nowrap; }
+  .ligne-progres .gain { flex: none; font-weight: 900; color: var(--acc-text); min-width: 38px; text-align: right; font-size: 20px; }
+  .bilan { font-family: var(--font-display); font-size: 20px; color: var(--acc-text); margin: 12px 0; }
+  #lien-evaluation { margin-top: 10px; }
+
+  /* Débriefing */
+  .question { margin: 12px 0; }
+  .question .phase {
+    font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--nj-indigo);
+  }
+  .question .dit { font-family: var(--font-hero); font-size: 19px; line-height: 25px; margin: 2px 0 0; }
+
+  /* Chrono et dé, fixés en bas */
+  #barre {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    background: var(--nj-navy); color: var(--bg);
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  }
+  #barre .dedans { max-width: 720px; margin: 0 auto; display: flex; align-items: center; gap: 10px; }
+  #chrono {
+    flex: none; min-width: 92px; text-align: center; border-radius: var(--radius-card);
+    padding: 4px 8px; background: transparent; border: 2px solid var(--nj-cyan);
+  }
+  #chrono .temps { display: block; font-family: var(--font-hero); font-weight: 600; font-size: 28px; line-height: 32px; color: var(--nj-cyan); font-variant-numeric: tabular-nums; }
+  #chrono .libelle { display: block; font-size: 11px; line-height: 14px; text-transform: uppercase; letter-spacing: .05em; color: var(--bg); }
+  #chrono.urgent { background: var(--nj-pink); border-color: var(--nj-pink); }
+  #chrono.urgent .temps { color: var(--bg); }
+  #de-resultat {
+    flex: none; width: 56px; height: 56px; border-radius: var(--radius-card);
+    background: var(--bg); color: var(--nj-blue);
+    font-family: var(--font-display); font-size: 34px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #de-resultat.roule { opacity: .5; }
+  .zone-de { flex: 1; min-width: 0; }
+  #de-texte { font-size: 12px; line-height: 15px; margin: 0 0 4px; color: var(--bg); }
+  #lancer-de { min-height: 44px; padding: 10px 8px; }
+
+  /* Pied de page */
+  footer {
+    background: linear-gradient(130deg, var(--nj-ultramarine) 0%, var(--nj-aqua) 89%);
+    color: var(--bg); font-family: Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 13px; line-height: 1.8; padding: 28px 16px; margin-top: 28px;
+  }
+  footer .dedans { max-width: 720px; margin: 0 auto; }
+  footer p { margin: 0 0 4px; max-width: 60%; }
+  footer a { color: var(--bg); }
+  .saisie {
+    font: inherit; width: 100%; padding: 12px; border: 2px solid var(--gray);
+    border-radius: var(--radius-card); min-height: 50px; background: var(--bg); color: var(--ink);
+  }
+
+  /* Version papier (plan B) */
+  #impression { display: none; }
+  body.impression { padding-bottom: 0; }
+  body.impression main, body.impression #barre, body.impression .entete .lead,
+  body.impression .entete .eyebrow, body.impression footer { display: none; }
+  body.impression #impression { display: block; max-width: 1000px; margin: 0 auto; padding: 16px; }
+  #impression h2 { margin: 18px 0 8px; font-size: 20px; color: var(--nj-blue); }
+  #impression .planche { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  #impression .carte-papier {
+    border: 2px solid var(--nj-blue); border-radius: var(--radius-card); padding: 10px;
+    min-height: 130px; break-inside: avoid; page-break-inside: avoid; font-size: 14px;
+  }
+  #impression .carte-papier .famille {
+    display: block; font-size: 11px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--nj-blue); margin-top: 4px;
+  }
+  #impression .carte-papier .valeur { display: block; font-weight: 700; }
+  #impression .consigne-papier {
+    border: 1px solid var(--gray); border-radius: var(--radius-card); padding: 12px; margin: 8px 0;
+    white-space: pre-wrap; font-size: 14px; break-inside: avoid; page-break-inside: avoid;
+  }
+  #impression .saut { break-before: page; page-break-before: always; }
+  #impression .mode-emploi { color: var(--text); font-size: 15px; margin: 4px 0 10px; }
+  #impression .coupon {
+    border: 2px dashed var(--gray); border-radius: var(--radius-card); padding: 12px; margin: 10px 0;
+    break-inside: avoid; page-break-inside: avoid; font-size: 14px;
+  }
+  #impression .coupon table { border-collapse: collapse; width: 100%; margin-top: 6px; }
+  #impression .coupon td { border: 1px solid var(--gray); padding: 6px; vertical-align: top; }
+  #impression .coupon td.note { width: 22%; white-space: nowrap; }
+  #impression .sans-impression button { max-width: 320px; }
+  @media print { #impression .sans-impression { display: none; } }
+  @media (min-width: 600px) {
+    h1 { font-size: 44px; line-height: 48px; }
+    .lead { font-size: 22px; line-height: 26px; }
+    h2 { font-size: 30px; line-height: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="entete">
+  <img class="logo" src="logo-nj.png" alt="N'oublie Jamais — formation" width="168" height="84">
+  <p class="eyebrow">Atelier · 30 minutes</p>
+  <h1>Créer un scénario de simulation avec l'IA</h1>
+  <p class="lead">Un téléphone, un outil gratuit, un guide de référence. Et un chrono.</p>
+</header>
+
+<main>
+
+  <section class="panneau violet" id="eval-avant">
+    <p class="eyebrow">Avant de commencer · 30 secondes</p>
+    <h2>Votre point de départ</h2>
+    <p class="aide">Trois curseurs, sans réfléchir. <strong>0</strong> = pas du tout, <strong>10</strong> = tout à fait. On compare à la fin.</p>
+    <div class="curseurs" data-moment="avant"></div>
+    <button id="valider-avant">C'est noté</button>
+    <p class="aide" id="avant-fait" hidden><strong>C'est noté.</strong> Rendez-vous au débriefing pour comparer.</p>
+  </section>
+
+  <section class="panneau cyan" id="briefing">
+    <p class="eyebrow">Briefing · 3 minutes</p>
+    <h2 id="recit-titre"></h2>
+    <p class="recit" id="recit-texte"></p>
+    <div class="carte">
+      <h3>Votre mission</h3>
+      <ul class="court">
+        <li>Livrer un <strong>scénario de simulation complet</strong>, conforme au guide de la SoFraSimS, avant la fin du chrono.</li>
+        <li>Votre coéquipière : <strong>une IA</strong>, à qui l'on a confié le guide.</li>
+      </ul>
+      <h3>Les règles</h3>
+      <ul class="court">
+        <li>L'IA propose <strong>3 options</strong>. Vous répondez <strong>1</strong>, <strong>2</strong> ou <strong>3</strong>. C'est vous qui validez.</li>
+        <li>Plus de 5 secondes d'hésitation ? <strong>Le dé décide</strong> (en bas de l'écran).</li>
+        <li>À <strong id="regle-auto-min">4</strong> minutes de la fin, mot de passe <strong>AUTO</strong> : l'IA termine tous les documents.</li>
+      </ul>
+      <p class="cadre"><strong>Le cadre.</strong> C'est l'IA qu'on met à l'épreuve, pas vous. Personne n'échoue : le mot de passe AUTO fait sortir tout le monde. Tout est fictif, on ne saisit aucune donnée de patient réel.</p>
+    </div>
+    <button id="demarrer">J'accepte la mission : lancer le chrono</button>
+    <p class="aide" id="mission-lancee" hidden><strong>Mission lancée.</strong> Le chrono tourne en bas de l'écran.</p>
+  </section>
+
+  <section class="panneau blanc" id="mission">
+    <p class="eyebrow">Mission · <span id="duree-mission">18</span> minutes</p>
+    <h2>Quatre cadenas à ouvrir</h2>
+    <p class="compteur"><span class="icones" id="compteur-icones"></span> <span id="compteur-texte"></span></p>
+
+    <article class="carte verrou" data-verrou="1">
+      <div class="verrou-tete"><span class="cadenas" aria-hidden="true"></span><h3>1. Rejoindre votre coéquipière</h3></div>
+      <div id="voie-preparee">
+        <p class="aide" id="aide-outil"></p>
+        <a class="bouton" id="lien-outil" target="_blank" rel="noopener" href="#">Ajouter l'assistant à Gemini</a>
+      </div>
+      <p class="alerte" id="pas-de-lien">L'assistant préparé n'est pas encore en ligne : utilisez « Partir de zéro » ci-dessous.</p>
+      <details id="partir-de-zero">
+        <summary>Partir de zéro (ça ne s'ouvre pas, ou je préfère une autre IA)</summary>
+        <p class="aide"><strong>Avec le guide</strong> — ouvrez Gemini, joignez le PDF du guide (bouton +), puis envoyez ces deux consignes l'une après l'autre.</p>
+        <div class="liens">
+          <a class="bouton secondaire" id="lien-ia" target="_blank" rel="noopener" href="#">Ouvrir Gemini</a>
+          <a class="bouton secondaire" id="lien-guide" target="_blank" rel="noopener" href="#">Télécharger le guide (site de la SoFraSimS)</a>
+        </div>
+        <div class="bloc-consigne" data-consigne="guide" data-libelle="Copier la consigne 1 (lire le guide)"></div>
+        <div class="bloc-consigne" data-consigne="regles" data-libelle="Copier la consigne 2 (les règles)"></div>
+        <p class="aide"><strong>Sans fichier</strong> — une seule consigne, qui marche dans n'importe quelle IA.</p>
+        <div class="bloc-consigne" data-consigne="toutEnUn" data-libelle="Copier la consigne tout-en-un"></div>
+      </details>
+      <button class="fait-btn secondaire" data-fait="1">C'est fait</button>
+    </article>
+
+    <article class="carte verrou" data-verrou="2">
+      <div class="verrou-tete"><span class="cadenas" aria-hidden="true"></span><h3>2. Recevoir la commande</h3></div>
+      <p class="aide">Vous ne choisissez ni le public ni la situation : la commande tombe.</p>
+      <button id="tirer">Recevoir ma commande</button>
+      <div class="cartes" id="cartes"></div>
+      <p class="relances" id="relances"></p>
+      <div class="bloc-consigne" id="bloc-tirage" data-consigne="tirage" data-libelle="Copier ma commande" data-principal="oui"></div>
+      <p class="aide" id="aide-tirage">Collez la commande dans l'IA et envoyez.</p>
+      <button class="fait-btn secondaire" data-fait="2">C'est fait</button>
+    </article>
+
+    <article class="carte verrou" data-verrou="3">
+      <div class="verrou-tete"><span class="cadenas" aria-hidden="true"></span><h3>3. Valider les livrables, un par un</h3></div>
+      <ul class="court">
+        <li>À chaque livrable, l'IA propose <strong>3 options</strong>. Répondez juste <strong>1</strong>, <strong>2</strong> ou <strong>3</strong>.</li>
+        <li>Vous hésitez ? <strong>Lancez le dé</strong>, en bas de l'écran.</li>
+        <li>Rien ne convient ? Corrigez en une phrase : « non, plutôt… », « plus court ».</li>
+      </ul>
+      <p class="aide"><strong>Un livrable vous laisse un doute ?</strong> Faites-le relire par l'IA, puis gardez ce qui vous convainc.</p>
+      <div class="bloc-consigne" data-consigne="relecture" data-libelle="Copier : « Fais une relecture critique… »"></div>
+      <div class="bloc-consigne" data-consigne="implemente" data-libelle="Copier : « Implémente ces améliorations. »"></div>
+      <button class="fait-btn secondaire" data-fait="3">J'ai validé au moins deux livrables</button>
+    </article>
+
+    <article class="carte verrou" data-verrou="4">
+      <div class="verrou-tete"><span class="cadenas" aria-hidden="true"></span><h3>4. Le mot de passe de sortie</h3></div>
+      <p class="aide" id="aide-auto"></p>
+      <p class="mot-cle">AUTO</p>
+      <p class="aide">Si sa réponse s'arrête en route, écrivez <strong>SUITE</strong>.</p>
+      <div class="bloc-consigne" data-consigne="auto" data-libelle="L'IA n'a pas compris ? Copier la consigne complète" data-secondaire="oui"></div>
+      <button class="fait-btn secondaire" data-fait="4">C'est fait : j'ai mon scénario</button>
+    </article>
+
+    <p class="accomplie" id="accomplie" hidden>Mission accomplie. <span>Place au débriefing.</span></p>
+  </section>
+
+  <section class="panneau violet" id="debriefing">
+    <p class="eyebrow">Débriefing · 6 minutes</p>
+    <h2>On pose les téléphones</h2>
+    <div class="question">
+      <span class="phase">1. Ressenti</span>
+      <p class="dit">En un mot : comment s'est passée la mission ?</p>
+    </div>
+    <div class="question">
+      <span class="phase">2. Analyse</span>
+      <p class="dit">Où avez-vous corrigé l'IA ? Où vous a-t-elle fait gagner du temps ?</p>
+      <p class="aide">Pour l'aider à se relire avec le guide, écrivez-lui :</p>
+      <p class="mot-cle">CRITIQUE</p>
+      <div class="bloc-consigne" data-consigne="critique" data-libelle="L'IA n'a pas compris ? Copier la consigne complète" data-secondaire="oui"></div>
+    </div>
+    <div class="question">
+      <span class="phase">3. Synthèse</span>
+      <p class="dit">Qu'est-ce que vous referez lundi ?</p>
+    </div>
+    <div class="carte" id="eval-apres">
+      <h3>Votre point d'arrivée</h3>
+      <p class="aide">Les trois mêmes curseurs qu'au début. <strong>0</strong> = pas du tout, <strong>10</strong> = tout à fait.</p>
+      <div class="curseurs" data-moment="apres"></div>
+      <button id="valider-apres">Voir ma progression</button>
+      <div id="progression" hidden></div>
+      <a class="bouton" id="lien-evaluation" target="_blank" rel="noopener" href="#" hidden>Envoyer mes réponses (anonyme)</a>
+    </div>
+  </section>
+
+  <section class="panneau blanc" id="a-emporter">
+    <p class="eyebrow">À emporter</p>
+    <h2>La méthode, en six phrases</h2>
+    <ul class="court">
+      <li><strong>Le corpus d'abord :</strong> l'IA travaille à partir de documents adaptés à votre public (référentiel de formation, guide de la SoFraSimS, recommandations de votre spécialité), pas de sa mémoire.</li>
+      <li><strong>Les étapes avant le contenu :</strong> on lui fait lister les étapes et les livrables, puis on avance un livrable à la fois.</li>
+      <li><strong>L'IA propose, l'humain valide :</strong> le dé, c'était pour tenir le chrono. Chez vous, chaque livrable se lit d'un œil critique, se fait relire par l'IA, puis se corrige.</li>
+      <li><strong>Le mode automatique donne un premier jet,</strong> pas un scénario fini : on le relit et on le teste avant de s'en servir.</li>
+      <li><strong>L'expert vérifie :</strong> tout ce qui est clinique (constantes, doses, évolution) se relit avant usage.</li>
+      <li><strong>Aucune donnée de patient réel</strong> dans un outil d'IA grand public.</li>
+    </ul>
+    <div class="liens">
+      <a class="bouton" id="lien-guide-nj" target="_blank" rel="noopener" href="#">Télécharger le guide (PDF, 4 pages)</a>
+      <a class="bouton secondaire" id="lien-recevoir-guide" target="_blank" rel="noopener" href="#" hidden>Recevoir le guide par e-mail</a>
+    </div>
+    <p class="aide">Le guide reprend la méthode pour votre propre public : quels documents rassembler, les consignes à copier, les précautions.</p>
+    <details id="version-longue">
+      <summary>La version complète (45 minutes), à partir de votre référentiel de formation</summary>
+      <p class="aide">Joignez à l'IA votre référentiel de formation et le guide de la SoFraSimS. Envoyez les consignes <strong>une par une</strong>, en remplaçant ce qui est entre crochets, et attendez la réponse avant la suivante.</p>
+      <div class="bloc-consigne" data-consigne="long1" data-libelle="1. Copier : la situation-problème"></div>
+      <div class="bloc-consigne" data-consigne="long2" data-libelle="2. Copier : les compétences"></div>
+      <div class="bloc-consigne" data-consigne="long3" data-libelle="3. Copier : « vous devrez être capable de… »"></div>
+      <div class="bloc-consigne" data-consigne="long4" data-libelle="4. Copier : les étapes du scénario"></div>
+      <div class="bloc-consigne" data-consigne="long5" data-libelle="5. Copier : les documents à produire"></div>
+      <div class="bloc-consigne" data-consigne="long6" data-libelle="6. Copier : livrable par livrable"></div>
+      <div class="bloc-consigne" data-consigne="relecture" data-libelle="À chaque livrable : « Fais une relecture critique… »"></div>
+      <div class="bloc-consigne" data-consigne="implemente" data-libelle="Puis : « Implémente ces améliorations. »"></div>
+      <div class="bloc-consigne" data-consigne="long7" data-libelle="7. Copier : le dossier patient fictif"></div>
+      <div class="bloc-consigne" data-consigne="long8" data-libelle="8. Copier : l'ordonnance fictive"></div>
+      <div class="bloc-consigne" data-consigne="long9" data-libelle="9. Copier : tout enregistrer en PDF"></div>
+    </details>
+  </section>
+
+  <section class="panneau cyan" id="nj">
+    <p class="eyebrow">Aller plus loin</p>
+    <h2>N'oublie Jamais forme vos équipes</h2>
+    <p id="nj-presentation"></p>
+    <div class="liens" id="nj-liens"></div>
+  </section>
+
+</main>
+
+<div id="impression"></div>
+
+<footer>
+  <div class="dedans">
+    <p>Atelier animé par Pierre Guilhem, N'oublie Jamais.</p>
+    <p>Cette page fonctionne sans connexion une fois ouverte.</p>
+    <p><a href="#imprimer" id="lien-imprimer">Version papier</a> · <a href="#" id="lien-zero">Tout effacer et recommencer</a></p>
+  </div>
+</footer>
+
+<div id="barre" role="region" aria-label="Chrono de la mission et dé à trois faces">
+  <div class="dedans">
+    <div id="chrono" aria-live="off"><span class="temps" id="chrono-temps">18:00</span><span class="libelle" id="chrono-libelle">chrono</span></div>
+    <div id="de-resultat" aria-live="polite">–</div>
+    <div class="zone-de">
+      <p id="de-texte">3 options ? Laissez le dé choisir.</p>
+      <button id="lancer-de">Lancer le dé</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   CONTENU DE L'ATELIER — tout ce qui se modifie est dans ce bloc.
+   ===================================================================== */
+
+/* Liens : à renseigner avant l'atelier. Laisser "" tant que le lien n'existe pas. */
+const LIEN_OUTIL = "https://gemini.google.com/customize/skills/d/146PETJT2Gju06li4QJ4zQZ7xXvTWXemk?usp=sharing";   /* compétence Gemini « nj-scenario-simulation » */
+const AIDE_OUTIL = "Notre assistant connaît déjà la méthode du guide de la SoFraSimS. Avec votre compte Google personnel : touchez le bouton, puis « Ajouter une compétence » et « Ajouter ». Ouvrez ensuite une nouvelle discussion dans Gemini : c'est là que vous collerez votre commande.";
+const LIEN_IA = "https://gemini.google.com/app";
+const LIEN_GUIDE = "https://www.sofrasims.org/articles/124231-actualisation-2023-du-referentiel-2018";
+
+/* Le guide à emporter (fichier PDF placé à côté de cette page) et, si on veut, le formulaire
+   qui l'envoie par e-mail. Laisser "" pour ne pas afficher le bouton « par e-mail ». */
+const LIEN_GUIDE_NJ = "guide-scenario-simulation-ia.pdf";
+const LIEN_RECEVOIR_GUIDE = "";
+
+/* Le chrono de la mission. */
+const DUREE_MISSION_MIN = 18;
+const ALERTE_AUTO_MIN = 4;      /* à combien de minutes de la fin on passe en mode automatique */
+
+/* Le récit du briefing. */
+const RECIT = {
+  titre: "SOS, panique au centre de simulation",
+  texte: "Ce matin, toute l'équipe du centre de simulation est clouée au lit par une épidémie de gastro. On vous appelle à la dernière minute : une séance commence tout à l'heure, pour un public que vous ne connaissez pas. Vous avez " + DUREE_MISSION_MIN + " minutes pour livrer un scénario de simulation complet."
+};
+
+const NB_RELANCES = 2;
+
+/* Le tirage : une filière, puis un public et une situation DE CETTE FILIÈRE (pour rester cohérent).
+   Chaque situation est rattachée au référentiel de formation de la filière (r = l'ancrage).
+   Situations déduites des référentiels : à relire par un formateur de chaque filière. */
+const FILIERES = [
+  { nom: "Infirmiers",
+    publics: ["Étudiants infirmiers de 2e année", "Étudiants infirmiers de 3e année"],
+    situations: [
+      { t: "Préparer une injection avec calcul de dose", r: "UE 4.4 S2, Thérapeutiques et contribution au diagnostic médical" },
+      { t: "Pose d'une transfusion sanguine", r: "UE 4.4 S4, Thérapeutiques et contribution au diagnostic médical" },
+      { t: "Patient agressif envers l'équipe aux urgences", r: "UE 4.2 S5, Soins relationnels" },
+      { t: "Détresse respiratoire en chambre, médecin pas encore arrivé", r: "UE 4.3 S4, Soins d'urgence" },
+      { t: "Transmissions orales à la relève", r: "UE 3.1 S2, Raisonnement et démarche clinique infirmière" },
+      { t: "Erreur d'identité repérée avant un soin", r: "UE 4.5 S4, Soins infirmiers et gestion des risques" }
+    ]},
+  { nom: "Aides-soignants",
+    publics: ["Élèves aides-soignants", "Élèves aides-soignants en fin de formation"],
+    situations: [
+      { t: "Glycémie capillaire anormale : alerter l'infirmier", r: "Bloc 2, module 3, Évaluation de l'état clinique d'une personne" },
+      { t: "Malaise d'une personne pendant le premier lever", r: "Bloc 2, module 4, Mise en œuvre des soins adaptés, évaluation et réajustement" },
+      { t: "Transfert du lit au fauteuil avec un lève-personne", r: "Bloc 2, module 5, Accompagnement de la mobilité de la personne aidée" },
+      { t: "Résident désorienté qui refuse la toilette", r: "Bloc 3, module 6, Relation et communication avec les personnes et leur entourage" },
+      { t: "Transmissions orales à l'infirmier après une chute", r: "Bloc 5, module 9, Traitement des informations" },
+      { t: "Signaler un événement indésirable à l'équipe", r: "Bloc 5, module 10, Travail en équipe pluriprofessionnelle, qualité et gestion des risques" }
+    ]},
+  { nom: "Auxiliaires de puériculture",
+    publics: ["Élèves auxiliaires de puériculture", "Élèves auxiliaires de puériculture en fin de formation"],
+    situations: [
+      { t: "Préparer et donner un biberon en crèche", r: "Bloc 1, module 1, Accompagnement de l'enfant dans les activités de sa vie quotidienne et de sa vie sociale" },
+      { t: "Nourrisson fébrile : surveiller et alerter", r: "Bloc 2, module 4, Mise en œuvre des soins adaptés, évaluation et réajustement" },
+      { t: "Gêne respiratoire d'un nourrisson : alerter", r: "Bloc 2, module 3, Évaluation de l'état clinique d'une personne" },
+      { t: "Accueil de parents inquiets en service de pédiatrie", r: "Bloc 3, module 6, Relation et communication avec les personnes et leur entourage" },
+      { t: "Suspicion de maltraitance : transmettre et alerter", r: "Bloc 1, module 2, Repérage et prévention des situations à risque" },
+      { t: "Signaler un événement indésirable en équipe", r: "Bloc 5, module 10, Travail en équipe pluriprofessionnelle, qualité et gestion des risques" }
+    ]},
+  { nom: "Manipulateurs en électroradiologie médicale",
+    publics: ["Étudiants manipulateurs radio de 2e année", "Étudiants manipulateurs radio de 3e année"],
+    situations: [
+      { t: "Réaction allergique après injection de produit de contraste", r: "UE 4.3, Gestes et soins d'urgences" },
+      { t: "Pose de voie veineuse avant un scanner injecté", r: "UE 4.1, Techniques de soins" },
+      { t: "Contrôle des contre-indications avant une IRM", r: "UE 4.6 S4, Explorations en remnographie" },
+      { t: "Patient angoissé qui refuse de poursuivre l'examen", r: "UE 4.2, Relation de soin et communication avec la personne soignée" },
+      { t: "Erreur d'identité avant une séance de radiothérapie", r: "UE 4.13, Démarche qualité et gestion des risques" },
+      { t: "Assister le radiologue lors d'un geste interventionnel", r: "UE 4.7, Imagerie vasculaire et interventionnelle" }
+    ]},
+  { nom: "Masseurs-kinésithérapeutes",
+    publics: ["Étudiants kinésithérapeutes de 3e année", "Étudiants kinésithérapeutes de 4e année"],
+    situations: [
+      { t: "Bilan d'un patient lombalgique en cabinet", r: "UE 19, Évaluation, techniques et outils d'intervention dans le champ musculosquelettique" },
+      { t: "Kinésithérapie respiratoire chez un patient encombré", r: "UE 21, champs respiratoire, cardio-vasculaire, interne et tégumentaire" },
+      { t: "Premier lever après un AVC, risque de chute", r: "UE 20, Évaluation, techniques et outils d'intervention dans le champ neuromusculaire" },
+      { t: "Malaise d'un patient pendant la séance", r: "UE 7, intervenir en situation d'urgence" },
+      { t: "Patient douloureux chronique démotivé, qui refuse l'exercice", r: "Compétence 5, relation et communication en masso-kinésithérapie" },
+      { t: "Réunion de synthèse pluriprofessionnelle en centre de rééducation", r: "UE 22, Théories, modèles, méthodes et outils en réadaptation" }
+    ]}
+];
+const CONTRAINTES = [
+  "Scénario de 10 minutes maximum",
+  "Un seul formateur disponible",
+  "Sans mannequin haute fidélité",
+  "Groupe de 12 apprenants, dont 9 observateurs",
+  "Débriefing de 20 minutes seulement",
+  "Première simulation de leur vie pour les apprenants",
+  "Budget matériel presque nul",
+  "À décliner en 3 niveaux de difficulté",
+  "Avec un facilitateur complice dans la scène",
+  "Dans une salle de cours ordinaire"
+];
+const CARTES = [
+  { cle: "public", nom: "Public" },
+  { cle: "situation", nom: "Situation à simuler" },
+  { cle: "contrainte", nom: "Contrainte" }
+];
+
+/* Évaluation avant / après : les mêmes questions au début et à la fin, de 0 à 10. */
+const QUESTIONS_EVAL = [
+  { cle: "etapes", texte: "Je sais quelles étapes suivre et quels documents produire pour préparer une simulation." },
+  { cle: "ia",     texte: "Je sais comment me servir d'une IA pour concevoir un scénario." },
+  { cle: "portee", texte: "Utiliser l'IA dans mon travail de formateur me paraît à ma portée." }
+];
+/* Adresse du formulaire qui recueille les réponses (facultatif). Laisser "" pour ne rien recueillir.
+   La page y remplace {avant1} {avant2} {avant3} {apres1} {apres2} {apres3} par les notes. */
+const LIEN_EVALUATION = "";
+
+/* Rubrique « Aller plus loin » : à relire par Pierre. */
+const NJ = {
+  presentation: "Nous formons les formateurs et les équipes pédagogiques : apprendre et former avec les sciences cognitives, et mettre l'IA au service de la réussite des formations. Organisme de formation certifié Qualiopi.",
+  liens: [
+    { texte: "Formation d'une journée : mettre l'IA au service de la réussite des formations", url: "https://noubliejamais.fr/ia-pedagogie-formation/", principal: true },
+    { texte: "Nos formations de formateurs", url: "https://noubliejamais.fr/innovation-pedagogique/" },
+    { texte: "Prendre rendez-vous", url: "https://noubliejamais.fr/rendez-vous/" }
+  ]
+};
+
+/* La grille d'observation demandée à l'IA. Critères tirés du guide de bonnes pratiques de la HAS (2024),
+   du référentiel de la SoFraSimS et des standards INACSL (2021). */
+const GRILLE =
+`une grille d'observation adaptée à ce scénario, pour une évaluation formative : chaque ligne est rattachée à un objectif pédagogique et décrit un comportement observable (10 lignes au maximum), les lignes techniques et non techniques sont séparées, chaque ligne se cote OUI ou NON, la grille se termine par une appréciation globale sur 10 et par une mission d'observation à confier aux observateurs`;
+
+/* Les consignes. {TIRAGE} est remplacé par la commande tirée au sort. */
+const REGLES_DU_JEU =
+`Voici les règles pour la suite.
+
+Je vais te donner ma commande : un public d'apprenants, une situation à simuler et une contrainte.
+
+Nous avançons ensuite livrable par livrable, dans l'ordre de ta liste (5 ou 6 livrables au total, pas plus) :
+1. À chaque livrable, tu me proposes 3 options numérotées 1, 2, 3, de deux lignes maximum chacune. Pour le tout premier, les 3 options portent sur la modalité de simulation et l'objectif principal ; tu utilises ensuite le gabarit du guide qui correspond à la modalité choisie.
+2. Tu t'arrêtes et tu attends ma réponse : un chiffre (souvent tiré au dé) ou une correction.
+3. Tu rédiges alors le livrable en 6 lignes maximum, puis tu enchaînes tout de suite sur le livrable suivant.
+4. Si mon choix contredit le guide ou fragilise la sécurité psychologique des apprenants, tu le dis en une phrase.
+
+Trois mots de passe :
+- Si j'écris AUTO : tu passes en mode automatique. Tu ne me poses plus aucune question. Tu décides toi-même de tout ce qui reste, en restant cohérent avec mes choix, et tu marques ces décisions par [choix de l'IA]. Tu rédiges alors d'affilée, en entier et avec un titre pour chacun, tous les livrables de ta liste, en suivant le gabarit du guide. Tu ajoutes un dossier patient fictif, une prescription fictive si la situation s'y prête, et ` + GRILLE + `. Tu termines par la liste « À faire vérifier par un expert » (tout ce qui est clinique : constantes, doses, évolution du patient).
+- Si j'écris SUITE : ta réponse a été coupée, tu reprends exactement où tu t'es arrêté.
+- Si j'écris CRITIQUE : tu compares ce que tu as produit au guide et tu cites les 3 écarts les plus importants, avec une correction en une phrase pour chacun.
+
+Tout est fictif : tu n'utilises et tu ne demandes aucune donnée de patient réel.
+
+Si tu as compris, réponds seulement : « Prêt. Donnez-moi votre commande. »`;
+
+const CONSIGNES = {
+  guide: {
+    titre: "Consigne 1 — faire lire le guide",
+    texte:
+`Tu vas m'aider à concevoir un scénario de simulation en santé.
+Je joins le référentiel 2023 de la SoFraSimS sur l'élaboration de scénarios (simulation immersive, participant simulé, simulation procédurale). Appuie-toi uniquement sur ce document.
+
+Liste, dans l'ordre du gabarit, les grandes étapes pour concevoir un scénario (5 ou 6 étapes, pas plus). Pour chaque étape, indique le livrable attendu (ce qu'il faut remplir ou produire) et ce qui change selon la modalité. Deux lignes par étape au maximum.
+
+N'écris rien d'autre et ne commence pas le scénario.`
+  },
+  regles: {
+    titre: "Consigne 2 — les règles",
+    texte: REGLES_DU_JEU
+  },
+  toutEnUn: {
+    titre: "Consigne tout-en-un, sans fichier",
+    texte:
+`Tu vas m'aider à concevoir un scénario de simulation en santé, en suivant la structure des gabarits du référentiel 2023 de la SoFraSimS, résumée ici :
+1. Contexte : équipe pédagogique, court résumé du scénario, apprenants cibles (nombre, fonctions, expérience requise), lien avec le programme de formation.
+2. Objectifs : analyse des besoins, puis 3 à 5 objectifs au maximum (techniques et non techniques).
+3. Préparation : documents du cas (dossier, biologie, ECG, imagerie), documents pédagogiques, consignes aux intervenants, environnement, matériel, simulateur, prébriefing.
+4. Déroulé : briefing des apprenants, durée, état de base, tableau des états (élément déclencheur, comportement attendu, conséquence), fin du scénario, préparation du débriefing.
+5. Qualité : test du scénario, améliorations après la session.
+Avec un participant simulé : ajouter son script (identité, histoire, état émotionnel, informations à ne donner que sur demande) et la phrase de démarrage. En simulation procédurale : ajouter la stratégie pédagogique et la grille d'évaluation du geste.
+
+` + REGLES_DU_JEU
+  },
+  tirage: {
+    titre: "Ma commande",
+    besoinTirage: true,
+    texte:
+`Ma commande :
+{TIRAGE}
+
+Commence par le premier livrable.`
+  },
+  auto: {
+    titre: "Mode automatique (consigne complète)",
+    texte:
+`Passe en mode automatique : ne me pose plus aucune question.
+
+Pour tout ce qui reste à décider, choisis toi-même l'option la plus cohérente avec mes choix et signale-la par [choix de l'IA].
+
+Rédige d'affilée, en entier et avec un titre pour chacun, tous les livrables du scénario, en suivant le gabarit du guide. Ajoute un dossier patient fictif, une prescription fictive si la situation s'y prête, et ` + GRILLE + `.
+
+Termine par la liste « À faire vérifier par un expert » : tout ce qui est clinique (constantes, doses, évolution du patient).`
+  },
+  critique: {
+    titre: "Faire relire (consigne complète)",
+    texte:
+`Relis tout ce que tu viens de produire en le comparant point par point au guide de la SoFraSimS.
+Cite les 3 écarts les plus importants, du plus gênant au moins gênant, et propose une correction en une phrase pour chacun.`
+  },
+
+  /* La boucle critique : à utiliser sur n'importe quel livrable. */
+  relecture: {
+    titre: "Relecture critique d'un livrable",
+    texte: `Fais une relecture critique de ta proposition et propose des améliorations.`
+  },
+  implemente: {
+    titre: "Appliquer les améliorations",
+    texte: `Implémente ces améliorations.`
+  },
+
+  /* La version complète (45 min) : les consignes de l'atelier long de N'oublie Jamais. */
+  long1: {
+    titre: "Version complète — 1. La situation-problème",
+    texte:
+`Je suis formateur [IFSI]. Je dois préparer une situation problème métier pour introduire l'UE [4.4 Semestre 2 : Thérapeutiques et contribution au diagnostic médical]. Cette situation problème doit mobiliser au maximum les préconisations précisées dans le référentiel ci-joint. Elle doit se situer en service et permettre à l'apprenant de se projeter dans l'exercice professionnel. Elle doit permettre de rendre visible les enjeux de la qualité de prise en charge pour la santé du patient. Merci de mettre en scène [un infirmier] et de ne pas mentionner l'étudiant. Afin de rendre la situation immersive, merci de t'adresser au lecteur avec un "vous", par exemple "vous êtes [un infirmier] en service ...". Propose-moi trois situations différentes, A, B et C, en cinq lignes chacune, et indique pour chacune ce qu'elle permet de travailler et sa limite. Je choisirai, puis tu développeras celle que j'aurai retenue.`
+  },
+  long2: {
+    titre: "Version complète — 2. Les compétences",
+    texte:
+`A partir du référentiel ci-joint, comment décrire simplement aux étudiants quels sont les savoirs, savoir-faire et savoir-être qui permettront de réussir à résoudre cette situation problème avec succès ?`
+  },
+  long3: {
+    titre: "Version complète — 3. Reformuler pour les étudiants",
+    texte:
+`Peux-tu reformuler ces éléments sous la forme : "Pour réussir à résoudre cette situation problème, vous devrez être capable de ..."`
+  },
+  long4: {
+    titre: "Version complète — 4. Les étapes du scénario (guide SoFraSimS joint)",
+    texte:
+`Je souhaite construire l'évaluation de cette UE. Comme indiqué sur le référentiel, la modalité de l'évaluation est un ["calcul de doses en situation simulée"]. A partir du guide SoFraSimS, peux-tu m'établir les étapes pour construire un scénario de simulation permettant d'évaluer les compétences précédemment établies ?`
+  },
+  long5: {
+    titre: "Version complète — 5. Les documents à produire",
+    texte:
+`Peux-tu m'établir la liste des étapes à suivre et des documents à produire pour finaliser la préparation de cette simulation ?`
+  },
+  long6: {
+    titre: "Version complète — 6. Livrable par livrable",
+    texte:
+`Nous allons produire chaque livrable un par un. Tu vas me faire une proposition pour le premier livrable. Nous itérerons dessus jusqu'à ce que je te dise "passe au livrable suivant".`
+  },
+  long7: {
+    titre: "Version complète — 7. Le dossier patient fictif",
+    texte:
+`Merci. Est-ce que tu peux créer un dossier patient fictif pour [M. Dupont] présent dans la simulation ?`
+  },
+  long8: {
+    titre: "Version complète — 8. L'ordonnance fictive",
+    texte:
+`Merci. Peux-tu spécifier l'ordonnance fictive pour cette simulation, s'il te plaît ?`
+  },
+  long9: {
+    titre: "Version complète — 9. Tout enregistrer",
+    texte:
+`Génère un document .pdf structuré reprenant à l'identique l'ensemble des réponses que tu as données à chaque prompt. Ne tronque pas le contenu, et ne le reformule pas. Le fichier généré doit pouvoir être utilisé tel quel.`
+  }
+};
+
+/* =====================================================================
+   FONCTIONNEMENT — rien à modifier en dessous pour changer le contenu.
+   ===================================================================== */
+
+const CLE_STOCKAGE = "atelier-scenarios-ia-v3";
+const NB_VERROUS = 4;
+function etatNeuf() {
+  return {
+    tirage: {}, relances: NB_RELANCES,
+    avant: {}, apres: {}, avantValide: false, apresValide: false,
+    debut: null, verrous: {}
+  };
+}
+let etat = etatNeuf();
+
+function charger() {
+  try {
+    const brut = localStorage.getItem(CLE_STOCKAGE);
+    if (brut) {
+      const lu = JSON.parse(brut);
+      if (lu && typeof lu === "object") etat = Object.assign(etat, lu);
+      ["tirage", "avant", "apres", "verrous"].forEach(c => {
+        if (!etat[c] || typeof etat[c] !== "object") etat[c] = {};
+      });
+    }
+  } catch (e) { /* stockage indisponible : la page marche quand même */ }
+}
+function enregistrer() {
+  try { localStorage.setItem(CLE_STOCKAGE, JSON.stringify(etat)); } catch (e) {}
+}
+function element(balise, classe, texte) {
+  const e = document.createElement(balise);
+  if (classe) e.className = classe;
+  if (texte !== undefined) e.textContent = texte;
+  return e;
+}
+
+function hasard(n) {
+  if (window.crypto && crypto.getRandomValues) {
+    const t = new Uint32Array(1);
+    const limite = Math.floor(0x100000000 / n) * n;
+    do { crypto.getRandomValues(t); } while (t[0] >= limite);
+    return t[0] % n;
+  }
+  return Math.floor(Math.random() * n);
+}
+function auHasard(liste, sauf) {
+  if (liste.length < 2) return liste[0];
+  let v;
+  do { v = liste[hasard(liste.length)]; } while (v === sauf);
+  return v;
+}
+
+/* ---- Récit, liens, rubrique N'oublie Jamais ---- */
+function afficherTextes() {
+  document.getElementById("recit-titre").textContent = RECIT.titre;
+  document.getElementById("recit-texte").textContent = RECIT.texte;
+  document.getElementById("duree-mission").textContent = DUREE_MISSION_MIN;
+  document.getElementById("regle-auto-min").textContent = ALERTE_AUTO_MIN;
+  document.getElementById("aide-auto").textContent =
+    "À " + ALERTE_AUTO_MIN + " minutes de la fin, où que vous en soyez : l'IA termine seule et rédige tous les documents du scénario, grille d'observation comprise. Écrivez simplement :";
+
+  const aLien = !!LIEN_OUTIL;
+  document.getElementById("voie-preparee").hidden = !aLien;
+  document.getElementById("pas-de-lien").hidden = aLien;
+  document.getElementById("aide-outil").textContent = AIDE_OUTIL;
+  if (aLien) document.getElementById("lien-outil").href = LIEN_OUTIL;
+  else document.getElementById("partir-de-zero").open = true;
+  document.getElementById("lien-ia").href = LIEN_IA;
+  document.getElementById("lien-guide").href = LIEN_GUIDE;
+
+  document.getElementById("lien-guide-nj").href = LIEN_GUIDE_NJ;
+  const recevoir = document.getElementById("lien-recevoir-guide");
+  recevoir.hidden = !LIEN_RECEVOIR_GUIDE;
+  if (LIEN_RECEVOIR_GUIDE) recevoir.href = LIEN_RECEVOIR_GUIDE;
+
+  document.getElementById("nj-presentation").textContent = NJ.presentation;
+  const zone = document.getElementById("nj-liens");
+  zone.innerHTML = "";
+  NJ.liens.forEach(l => {
+    const a = element("a", l.principal ? "bouton" : "bouton secondaire", l.texte);
+    a.href = l.url; a.target = "_blank"; a.rel = "noopener";
+    zone.appendChild(a);
+  });
+}
+
+/* ---- Chrono ---- */
+let dejaVibre = { alerte: false, fin: false };
+function resteMs() {
+  if (!etat.debut) return null;
+  return etat.debut + DUREE_MISSION_MIN * 60000 - Date.now();
+}
+function deuxChiffres(n) { return (n < 10 ? "0" : "") + n; }
+function vibrer(motif) { try { if (navigator.vibrate) navigator.vibrate(motif); } catch (e) {} }
+function majChrono() {
+  const zone = document.getElementById("chrono");
+  const temps = document.getElementById("chrono-temps");
+  const libelle = document.getElementById("chrono-libelle");
+  const reste = resteMs();
+  const quatre = document.querySelector('.verrou[data-verrou="4"]');
+  document.getElementById("demarrer").hidden = !!etat.debut;
+  document.getElementById("mission-lancee").hidden = !etat.debut;
+  if (reste === null) {
+    temps.textContent = deuxChiffres(DUREE_MISSION_MIN) + ":00";
+    libelle.textContent = "chrono";
+    zone.classList.remove("urgent");
+    quatre.classList.remove("urgent");
+    return;
+  }
+  const s = Math.max(0, Math.ceil(reste / 1000));
+  temps.textContent = deuxChiffres(Math.floor(s / 60)) + ":" + deuxChiffres(s % 60);
+  const urgent = s <= ALERTE_AUTO_MIN * 60;
+  zone.classList.toggle("urgent", urgent);
+  quatre.classList.toggle("urgent", urgent && !etat.verrous[4]);
+  if (s === 0) libelle.textContent = "AUTO, puis débriefing";
+  else if (urgent) libelle.textContent = "écrivez AUTO";
+  else libelle.textContent = "avant la séance";
+  if (urgent && s > 0 && !dejaVibre.alerte) { dejaVibre.alerte = true; vibrer([200, 100, 200]); }
+  if (s === 0 && !dejaVibre.fin) { dejaVibre.fin = true; dejaVibre.alerte = true; vibrer([400, 150, 400]); }
+}
+function demarrerMission() {
+  if (etat.debut) return;
+  etat.debut = Date.now();
+  dejaVibre = { alerte: false, fin: false };
+  enregistrer();
+  majChrono();
+  document.getElementById("mission").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/* ---- Cadenas ---- */
+const SVG_FERME = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+const SVG_OUVERT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 7.6-1.7"/><path d="M12 15v2"/></svg>';
+function majVerrous() {
+  let ouverts = 0;
+  const icones = document.getElementById("compteur-icones");
+  icones.innerHTML = "";
+  document.querySelectorAll(".verrou").forEach(v => {
+    const n = v.dataset.verrou;
+    const ouvert = !!etat.verrous[n];
+    if (ouvert) ouverts++;
+    v.classList.toggle("ouvert", ouvert);
+    v.querySelector(".cadenas").innerHTML = ouvert ? SVG_OUVERT : SVG_FERME;
+    const b = v.querySelector(".fait-btn");
+    if (!b.dataset.libelle) b.dataset.libelle = b.textContent;
+    b.textContent = ouvert ? "Cadenas ouvert (toucher pour refermer)" : b.dataset.libelle;
+    b.classList.toggle("fait", ouvert);
+    const petit = element("span", "cadenas" + (ouvert ? " ouvert" : ""));
+    petit.innerHTML = ouvert ? SVG_OUVERT : SVG_FERME;
+    icones.appendChild(petit);
+  });
+  document.getElementById("compteur-texte").textContent =
+    ouverts + " cadenas ouvert" + (ouverts > 1 ? "s" : "") + " sur " + NB_VERROUS;
+  document.getElementById("accomplie").hidden = ouverts < NB_VERROUS;
+  majChrono();
+}
+function basculerVerrou(n) {
+  etat.verrous[n] = !etat.verrous[n];
+  enregistrer();
+  majVerrous();
+}
+
+/* ---- Tirage : la commande ---- */
+function tirageComplet() {
+  return CARTES.every(c => etat.tirage[c.cle]) && !!filiereCourante();
+}
+function texteTirage() {
+  return CARTES.map(c => {
+    let ligne = "- " + c.nom + " : " + (etat.tirage[c.cle] || "à définir");
+    if (c.cle === "situation" && etat.tirage.ancrage) ligne += " (référentiel de formation : " + etat.tirage.ancrage + ")";
+    return ligne;
+  }).join("\n");
+}
+function filiereCourante() {
+  return FILIERES.find(f => f.nom === etat.tirage.filiere) || null;
+}
+function candidats(cle) {
+  /* Ce qui peut défiler pendant l'animation, et ce qui peut sortir, pour une carte donnée. */
+  if (cle === "contrainte") return CONTRAINTES;
+  const f = filiereCourante();
+  if (cle === "situation") return (f || FILIERES[0]).situations.map(s => s.t);
+  return FILIERES.reduce((tous, x) => tous.concat(x.publics), []);
+}
+function afficherCartes() {
+  const zone = document.getElementById("cartes");
+  zone.innerHTML = "";
+  CARTES.forEach(c => {
+    const b = element("button", "carte-tirage" + (etat.tirage[c.cle] ? "" : " vide"));
+    b.dataset.cle = c.cle;
+    const valeur = etat.tirage[c.cle];
+    b.setAttribute("aria-label", c.nom + " : " + (valeur || "pas encore tiré") + ". Toucher pour relancer.");
+    b.appendChild(element("span", "famille", c.nom));
+    b.appendChild(element("span", "valeur", valeur || "…"));
+    if (c.cle === "situation" && valeur && etat.tirage.ancrage) b.appendChild(element("span", "ancrage", "Référentiel : " + etat.tirage.ancrage));
+    b.addEventListener("click", () => relancer(c.cle));
+    zone.appendChild(b);
+  });
+  const r = document.getElementById("relances");
+  if (!tirageComplet()) r.textContent = "";
+  else if (etat.relances > 0) r.textContent = "Relances restantes : " + etat.relances + ". Touchez la carte à changer (changer de public change aussi la situation).";
+  else r.textContent = "Plus de relance : c'est votre commande, on avance.";
+  document.getElementById("tirer").textContent = tirageComplet() ? "Recevoir une autre commande" : "Recevoir ma commande";
+  document.getElementById("tirer").className = tirageComplet() ? "secondaire" : "";
+  majConsignes();
+}
+function animer(cle, fin) {
+  const bouton = document.querySelector('.carte-tirage[data-cle="' + cle + '"]');
+  if (!bouton) { fin(); return; }
+  const cible = bouton.querySelector(".valeur");
+  const liste = candidats(cle);
+  bouton.classList.add("roule");
+  bouton.classList.remove("vide");
+  let tours = 0;
+  const minuterie = setInterval(() => {
+    cible.textContent = liste[hasard(liste.length)];
+    tours++;
+    if (tours >= 8) { clearInterval(minuterie); fin(); }
+  }, 70);
+}
+function nouveauPublic(tirage) {
+  /* Tire une filière différente, puis un public et une situation de cette filière. */
+  const f = auHasard(FILIERES, filiereCourante());
+  tirage.filiere = f.nom;
+  tirage.public = auHasard(f.publics);
+  nouvelleSituation(tirage, f, null);
+}
+function nouvelleSituation(tirage, f, sauf) {
+  let s;
+  do { s = f.situations[hasard(f.situations.length)]; } while (f.situations.length > 1 && s.t === sauf);
+  tirage.situation = s.t;
+  tirage.ancrage = s.r;
+}
+function animerPuis(cles, appliquer) {
+  let restants = cles.length;
+  cles.forEach(cle => animer(cle, () => {
+    restants--;
+    if (restants === 0) { appliquer(); enregistrer(); afficherCartes(); }
+  }));
+}
+function toutTirer() {
+  const nouveau = { contrainte: auHasard(CONTRAINTES, etat.tirage.contrainte) };
+  nouveauPublic(nouveau);
+  animerPuis(["public", "situation", "contrainte"], () => {
+    etat.tirage = nouveau;
+    etat.relances = NB_RELANCES;
+  });
+}
+function relancer(cle) {
+  if (!tirageComplet()) { toutTirer(); return; }
+  if (etat.relances <= 0) return;
+  const nouveau = Object.assign({}, etat.tirage);
+  let cles = [cle];
+  if (cle === "public") { nouveauPublic(nouveau); cles = ["public", "situation"]; }
+  else if (cle === "situation") nouvelleSituation(nouveau, filiereCourante(), etat.tirage.situation);
+  else nouveau.contrainte = auHasard(CONTRAINTES, etat.tirage.contrainte);
+  animerPuis(cles, () => { etat.tirage = nouveau; etat.relances--; });
+}
+
+/* ---- Consignes ---- */
+function texteConsigne(cle) {
+  return CONSIGNES[cle].texte.replace("{TIRAGE}", texteTirage());
+}
+function afficherConsignes() {
+  document.querySelectorAll(".bloc-consigne").forEach(bloc => {
+    const cle = bloc.dataset.consigne;
+    const b = element("button", bloc.dataset.principal === "oui" ? "" : "secondaire", bloc.dataset.libelle);
+    b.dataset.libelle = bloc.dataset.libelle;
+    b.addEventListener("click", () => copier(cle, b));
+    const det = document.createElement("details");
+    det.appendChild(element("summary", "", "Voir le texte"));
+    const pre = element("div", "consigne"); pre.dataset.texte = cle;
+    det.appendChild(pre);
+    bloc.appendChild(b); bloc.appendChild(det);
+  });
+  majConsignes();
+}
+function majConsignes() {
+  document.querySelectorAll(".consigne[data-texte]").forEach(pre => {
+    pre.textContent = texteConsigne(pre.dataset.texte);
+  });
+  document.getElementById("bloc-tirage").hidden = !tirageComplet();
+  document.getElementById("aide-tirage").hidden = !tirageComplet();
+}
+function copieDeSecours(texte) {
+  const t = document.createElement("textarea");
+  t.value = texte;
+  t.setAttribute("readonly", "");
+  t.style.position = "fixed"; t.style.top = "0"; t.style.left = "0"; t.style.opacity = "0";
+  document.body.appendChild(t);
+  t.focus(); t.select(); t.setSelectionRange(0, texte.length);
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+  document.body.removeChild(t);
+  return ok;
+}
+function copier(cle, bouton) {
+  const texte = texteConsigne(cle);
+  const libelle = bouton.dataset.libelle;
+  const reussi = () => {
+    bouton.textContent = "Copié : collez dans l'IA";
+    bouton.classList.add("fait");
+    setTimeout(() => { bouton.textContent = libelle; bouton.classList.remove("fait"); }, 2500);
+  };
+  const rate = () => {
+    bouton.textContent = "Copie impossible : ouvrez « Voir le texte »";
+    const det = bouton.parentNode.querySelector("details");
+    if (det) det.open = true;
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(texte).then(reussi, () => { copieDeSecours(texte) ? reussi() : rate(); });
+  } else {
+    copieDeSecours(texte) ? reussi() : rate();
+  }
+}
+
+/* ---- Dé ---- */
+function lancerDe() {
+  const zone = document.getElementById("de-resultat");
+  const final = hasard(3) + 1;
+  zone.classList.add("roule");
+  let tours = 0;
+  const minuterie = setInterval(() => {
+    zone.textContent = String(hasard(3) + 1);
+    tours++;
+    if (tours >= 8) {
+      clearInterval(minuterie);
+      zone.textContent = String(final);
+      zone.classList.remove("roule");
+      document.getElementById("de-texte").textContent = "Le dé a choisi : répondez « " + final + " ».";
+    }
+  }, 70);
+}
+
+/* ---- Évaluation avant / après ---- */
+function note(moment, cle) {
+  const v = etat[moment][cle];
+  return (typeof v === "number") ? v : null;
+}
+function toutNote(moment) {
+  return QUESTIONS_EVAL.every(q => note(moment, q.cle) !== null);
+}
+function afficherCurseurs() {
+  document.querySelectorAll(".curseurs").forEach(zone => {
+    const moment = zone.dataset.moment;
+    zone.innerHTML = "";
+    QUESTIONS_EVAL.forEach(q => {
+      const bloc = element("div", "curseur");
+      const id = "curseur-" + moment + "-" + q.cle;
+      const lab = element("label", "", q.texte);
+      lab.htmlFor = id;
+      const ligne = element("div", "ligne-curseur");
+      const c = document.createElement("input");
+      c.type = "range"; c.min = "0"; c.max = "10"; c.step = "1"; c.id = id;
+      const v = note(moment, q.cle);
+      c.value = (v === null) ? "5" : String(v);
+      c.disabled = (moment === "avant" && etat.avantValide);
+      const sortie = element("output", "valeur-curseur", (v === null) ? "–" : String(v));
+      sortie.htmlFor = id;
+      const noter = () => {
+        etat[moment][q.cle] = Number(c.value);
+        sortie.textContent = c.value;
+        enregistrer();
+        majEvaluation();
+      };
+      ["input", "change", "click"].forEach(ev => c.addEventListener(ev, noter));
+      ligne.appendChild(c); ligne.appendChild(sortie);
+      const echelle = element("div", "echelle");
+      echelle.appendChild(element("span", "", "0 · pas du tout"));
+      echelle.appendChild(element("span", "", "tout à fait · 10"));
+      bloc.appendChild(lab); bloc.appendChild(ligne); bloc.appendChild(echelle);
+      zone.appendChild(bloc);
+    });
+  });
+  majEvaluation();
+}
+function lienEvaluation() {
+  let lien = LIEN_EVALUATION;
+  QUESTIONS_EVAL.forEach((q, i) => {
+    const a = note("avant", q.cle), b = note("apres", q.cle);
+    lien = lien.split("{avant" + (i + 1) + "}").join(a === null ? "" : String(a));
+    lien = lien.split("{apres" + (i + 1) + "}").join(b === null ? "" : String(b));
+  });
+  return lien;
+}
+function majEvaluation() {
+  const bAvant = document.getElementById("valider-avant");
+  bAvant.hidden = etat.avantValide;
+  bAvant.disabled = !toutNote("avant");
+  bAvant.textContent = toutNote("avant") ? "C'est noté" : "Réglez les 3 curseurs";
+  document.getElementById("avant-fait").hidden = !etat.avantValide;
+
+  const bApres = document.getElementById("valider-apres");
+  bApres.disabled = !toutNote("apres");
+  bApres.textContent = toutNote("apres") ? "Voir ma progression" : "Réglez les 3 curseurs";
+  bApres.className = etat.apresValide ? "secondaire" : "";
+
+  const zone = document.getElementById("progression");
+  const lien = document.getElementById("lien-evaluation");
+  const montrer = etat.apresValide && toutNote("apres");
+  zone.hidden = !montrer;
+  lien.hidden = !(montrer && LIEN_EVALUATION);
+  if (!montrer) return;
+  zone.innerHTML = "";
+  let total = 0, compares = 0;
+  QUESTIONS_EVAL.forEach(q => {
+    const a = note("avant", q.cle), b = note("apres", q.cle);
+    const ligne = element("div", "ligne-progres");
+    ligne.appendChild(element("span", "quoi", q.texte));
+    ligne.appendChild(element("span", "chiffres", (a === null ? "?" : a) + " → " + b));
+    let gain = "";
+    if (a !== null) {
+      const d = b - a; total += d; compares++;
+      gain = (d > 0 ? "+" : "") + d;
+    }
+    ligne.appendChild(element("span", "gain", gain));
+    zone.appendChild(ligne);
+  });
+  if (compares > 0) {
+    const moyenne = Math.round((total / compares) * 10) / 10;
+    const texte = moyenne > 0
+      ? "En 30 minutes : +" + String(moyenne).replace(".", ",") + " point" + (moyenne >= 2 ? "s" : "") + " en moyenne."
+      : "Merci : votre avis nous aide à améliorer l'atelier.";
+    zone.appendChild(element("p", "bilan", texte));
+  }
+  if (LIEN_EVALUATION) lien.href = lienEvaluation();
+}
+function validerAvant() {
+  if (!toutNote("avant")) return;
+  etat.avantValide = true;
+  enregistrer();
+  afficherCurseurs();
+  document.getElementById("briefing").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+function validerApres() {
+  if (!toutNote("apres")) return;
+  etat.apresValide = true;
+  enregistrer();
+  majEvaluation();
+}
+
+/* ---- Version papier (plan B) ---- */
+function afficherImpression() {
+  const zone = document.getElementById("impression");
+  zone.innerHTML = "";
+  const retour = element("p", "sans-impression");
+  const bImprimer = element("button", "", "Imprimer cette page");
+  bImprimer.addEventListener("click", () => window.print());
+  const lienRetour = element("a", "", "← Revenir à la page de l'atelier");
+  lienRetour.href = "#";
+  lienRetour.style.cssText = "display:block;margin:10px 0;color:#0343e5";
+  lienRetour.addEventListener("click", e => { e.preventDefault(); modePapier(false); });
+  retour.appendChild(bImprimer); retour.appendChild(lienRetour);
+  zone.appendChild(retour);
+
+  zone.appendChild(element("h2", "", "Cartes « commande » à découper"));
+  zone.appendChild(element("p", "mode-emploi",
+    "Découper les cartes et les retourner. Chaque participant en tire une : elle contient sa commande complète (public, situation, contrainte). Pour le dé : un vrai dé (1-2 = option 1, 3-4 = option 2, 5-6 = option 3)."));
+  const planche = element("div", "planche");
+  let n = 0;
+  FILIERES.forEach(f => {
+    f.situations.forEach((s, i) => {
+      const carte = element("div", "carte-papier");
+      const lignes = [["Public", f.publics[i % f.publics.length]], ["Situation à simuler", s.t + " (" + s.r + ")"],
+                      ["Contrainte", CONTRAINTES[n % CONTRAINTES.length]]];
+      lignes.forEach(l => {
+        carte.appendChild(element("span", "famille", l[0]));
+        carte.appendChild(element("span", "valeur", l[1]));
+      });
+      planche.appendChild(carte);
+      n++;
+    });
+  });
+  zone.appendChild(planche);
+
+  zone.appendChild(element("h2", "saut", "Le briefing"));
+  zone.appendChild(element("div", "consigne-papier", RECIT.titre + "\n\n" + RECIT.texte));
+
+  zone.appendChild(element("h2", "", "Les consignes à donner à l'IA"));
+  zone.appendChild(element("p", "mode-emploi",
+    "Dans l'ordre : consigne 1 avec le guide joint, consigne 2, puis la commande. Sans fichier : la consigne tout-en-un, puis la commande."));
+  ["guide", "regles", "toutEnUn", "tirage", "relecture", "implemente", "auto", "critique"].forEach(cle => {
+    const c = CONSIGNES[cle];
+    zone.appendChild(element("h2", "", c.titre));
+    zone.appendChild(element("div", "consigne-papier",
+      c.texte.replace("{TIRAGE}", CARTES.map(x => "- " + x.nom + " : (ma carte)").join("\n"))));
+  });
+
+  zone.appendChild(element("h2", "saut", "Évaluation avant / après (coupons à découper)"));
+  zone.appendChild(element("p", "mode-emploi",
+    "Un coupon par participant. Colonne « Avant » à l'arrivée, colonne « Après » au débriefing. Notes de 0 (pas du tout) à 10 (tout à fait). À ramasser à la sortie."));
+  for (let k = 0; k < 4; k++) {
+    const coupon = element("div", "coupon");
+    coupon.appendChild(element("strong", "", "Atelier N'oublie Jamais — créer un scénario de simulation avec l'IA"));
+    const table = document.createElement("table");
+    const tete = document.createElement("tr");
+    tete.appendChild(element("td", "", "De 0 (pas du tout) à 10 (tout à fait)"));
+    tete.appendChild(element("td", "note", "Avant"));
+    tete.appendChild(element("td", "note", "Après"));
+    table.appendChild(tete);
+    QUESTIONS_EVAL.forEach(q => {
+      const tr = document.createElement("tr");
+      tr.appendChild(element("td", "", q.texte));
+      tr.appendChild(element("td", "note", "…… / 10"));
+      tr.appendChild(element("td", "note", "…… / 10"));
+      table.appendChild(tr);
+    });
+    coupon.appendChild(table);
+    zone.appendChild(coupon);
+  }
+}
+function modePapier(papier) {
+  document.body.classList.toggle("impression", papier);
+  if (papier) afficherImpression();
+  window.scrollTo(0, 0);
+}
+function choisirMode() { modePapier(location.hash === "#imprimer"); }
+window.addEventListener("hashchange", choisirMode);
+document.getElementById("lien-imprimer").addEventListener("click", e => { e.preventDefault(); modePapier(true); });
+
+/* ---- Démarrage ---- */
+charger();
+choisirMode();
+afficherTextes();
+afficherCartes();
+afficherConsignes();
+afficherCurseurs();
+majVerrous();
+setInterval(majChrono, 500);
+document.getElementById("tirer").addEventListener("click", toutTirer);
+document.getElementById("lancer-de").addEventListener("click", lancerDe);
+document.getElementById("demarrer").addEventListener("click", demarrerMission);
+document.getElementById("valider-avant").addEventListener("click", validerAvant);
+document.getElementById("valider-apres").addEventListener("click", validerApres);
+document.querySelectorAll(".fait-btn").forEach(b => {
+  b.addEventListener("click", () => basculerVerrou(b.dataset.fait));
+});
+document.getElementById("lien-zero").addEventListener("click", e => {
+  e.preventDefault();
+  if (!confirm("Effacer votre commande, vos réponses et le chrono sur cet appareil ?")) return;
+  try { localStorage.removeItem(CLE_STOCKAGE); } catch (err) {}
+  etat = etatNeuf();
+  dejaVibre = { alerte: false, fin: false };
+  afficherCartes();
+  afficherCurseurs();
+  majVerrous();
+  window.scrollTo(0, 0);
+});
+</script>
+</body>
+</html>

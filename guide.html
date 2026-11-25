@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guide — Construire un scénario de simulation avec l'IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Varela+Round&display=swap" rel="stylesheet">
+<style>
+  /* Jetons du design system N'oublie Jamais. Ce fichier sert à fabriquer le PDF du guide. */
+  :root {
+    --bg: #ffffff; --ink: #000000; --text: #4b4f58; --gray: #a3a5a9;
+    --nj-blue: #0343e5; --nj-violet: #4632da; --nj-indigo: #5010e1; --nj-navy: #011640;
+    --nj-pink: #f01b59; --nj-tint-cyan: #edfbff; --nj-tint-violet: #f6f3fd;
+    --nj-ultramarine: #0700dd; --nj-aqua: #00f2ff;
+    --font-display: "Varela Round", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-sans: Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-hero: Helvetica, "Helvetica Neue", Arial, sans-serif;
+  }
+  @page { size: A4; margin: 11mm 15mm 11mm; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto; max-width: 180mm; padding: 0 12px;
+    font-family: var(--font-sans); font-size: 10.6pt; line-height: 1.45; color: var(--ink); background: var(--bg);
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  @media print { body { padding: 0; max-width: none; } }
+  .logo { width: 150px; height: auto; display: block; margin-left: -8px; }
+  .eyebrow { font-size: 10pt; text-transform: uppercase; letter-spacing: .05em; color: var(--nj-blue); margin: 4px 0 4px; }
+  h1 { font-family: var(--font-hero); font-weight: 600; font-size: 27pt; line-height: 1.08; margin: 0 0 8px; }
+  .lead { font-family: var(--font-hero); font-size: 13pt; line-height: 1.3; margin: 0 0 12px; }
+  h2 { font-family: var(--font-display); font-weight: 600; font-size: 15pt; line-height: 1.2; margin: 16px 0 6px; break-after: avoid; }
+  h2 .num { color: var(--nj-blue); }
+  h3 { font-family: var(--font-display); font-size: 11.5pt; color: var(--nj-blue); margin: 0 0 4px; }
+  p { margin: 0 0 7px; }
+  ul { margin: 4px 0 8px; padding-left: 18px; }
+  li { margin: 2px 0; }
+  .panneau { border-radius: 22px; padding: 12px 16px; margin: 10px 0; break-inside: avoid; }
+  .cyan { background: var(--nj-tint-cyan); }
+  .violet { background: var(--nj-tint-violet); }
+  .violet h3 { color: var(--nj-violet); }
+  .deux { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .deux .carte { background: var(--bg); border-radius: 12px; padding: 10px 12px; }
+  table { border-collapse: collapse; width: 100%; margin: 6px 0 8px; font-size: 9.8pt; break-inside: avoid; }
+  th { text-align: left; font-family: var(--font-display); font-weight: 400; color: var(--nj-blue); border-bottom: 2px solid var(--nj-blue); padding: 4px 8px 4px 0; }
+  td { vertical-align: top; border-bottom: 1px solid var(--gray); padding: 5px 8px 5px 0; }
+  td:first-child { font-weight: 700; width: 24%; }
+  .consigne {
+    border-left: 4px solid var(--nj-blue); background: var(--nj-tint-cyan); border-radius: 0 10px 10px 0;
+    padding: 7px 10px; margin: 5px 0 8px; font-size: 9.6pt; break-inside: avoid;
+  }
+  .consigne .quand { display: block; font-weight: 700; color: var(--nj-blue); font-size: 8.6pt; text-transform: uppercase; letter-spacing: .05em; }
+  .etape p, .etape li { orphans: 3; widows: 3; }
+  .saut { break-before: page; }
+  .pied {
+    background: linear-gradient(130deg, var(--nj-ultramarine) 0%, var(--nj-aqua) 89%); color: #fff;
+    border-radius: 22px; padding: 14px 18px; margin: 14px 0 0; break-inside: avoid;
+  }
+  .pied h3 { color: #fff; font-size: 13pt; }
+  .pied p { max-width: 66%; margin-bottom: 4px; }
+  .pied a { color: #fff; font-weight: 700; }
+  .sources { font-size: 8.4pt; color: var(--text); margin-top: 10px; }
+  .sans-impression { margin: 12px 0; }
+  .sans-impression button {
+    font: inherit; font-weight: 700; background: var(--nj-blue); color: #fff; border: 0; border-radius: 4px; padding: 12px 20px; cursor: pointer;
+  }
+  @media print { .sans-impression { display: none; } }
+</style>
+</head>
+<body>
+
+<p class="sans-impression"><button onclick="window.print()">Imprimer ou enregistrer en PDF</button></p>
+
+<img class="logo" src="logo-nj.png" alt="N'oublie Jamais — formation">
+<p class="eyebrow">Guide pratique</p>
+<h1>Construire un scénario de simulation avec l'IA</h1>
+<p class="lead">Une méthode en six étapes, les consignes prêtes à copier et les astuces pour garder la main. Pour les formateurs en simulation en santé, quelle que soit la filière.</p>
+
+<div class="panneau cyan">
+  <h3>L'idée en trois phrases</h3>
+  <p>Une IA rédige vite, mais elle ne connaît ni vos apprenants, ni votre référentiel, ni les recommandations de votre spécialité : livrée à elle-même, elle invente.</p>
+  <p>On commence donc toujours par lui donner <strong>les bons documents</strong>. Ensuite, on avance avec méthode, <strong>un livrable à la fois</strong>, et on examine chaque proposition d'un œil critique avant de la valider.</p>
+  <p><strong>L'esprit critique est la compétence clé avec l'IA :</strong> elle écrit avec la même assurance quand elle a raison et quand elle se trompe.</p>
+</div>
+
+<div class="etape">
+<h2><span class="num">1.</span> Rassemblez votre corpus de documents</h2>
+<p>C'est l'étape qui fait la qualité du résultat. Le corpus change avec le public : on ne construit pas un scénario pour des médecins anesthésistes avec les documents d'un institut de formation d'aides-soignants.</p>
+<table>
+  <tr><th>Ce qu'il vous faut</th><th>À quoi ça sert</th><th>Exemples</th></tr>
+  <tr><td>Le cadre de la formation</td><td>Situer le niveau des apprenants et rattacher le scénario à des compétences à acquérir.</td><td>Référentiel de formation ou de compétences (infirmier, aide-soignant, sage-femme, infirmier anesthésiste…), maquette du diplôme, programme de formation continue.</td></tr>
+  <tr><td>La méthode de simulation</td><td>Donner à l'IA la structure d'un bon scénario, au lieu de la sienne.</td><td>Référentiel 2023 de la SoFraSimS sur l'élaboration de scénarios (trois gabarits), guide de bonnes pratiques de la HAS (2024).</td></tr>
+  <tr><td>Le contenu clinique</td><td>Appuyer la situation sur des recommandations à jour, que l'IA citera.</td><td>Recommandations de la HAS et de votre société savante (la SFAR en anesthésie-réanimation, le CNGOF en obstétrique…), protocoles de votre établissement.</td></tr>
+  <tr><td>Votre terrain</td><td>Obtenir un scénario réalisable chez vous.</td><td>Salle, matériel et simulateurs disponibles, nombre d'apprenants et de formateurs, durée, votre gabarit de scénario si vous en avez un.</td></tr>
+</table>
+<div class="panneau violet deux">
+  <div class="carte"><h3>Pour des médecins anesthésistes</h3>Maquette de formation de la spécialité, recommandations de la SFAR sur la situation choisie, protocole du bloc, référentiel de la SoFraSimS.</div>
+  <div class="carte"><h3>Pour des sages-femmes</h3>Référentiel de formation en maïeutique, recommandations du CNGOF et de la HAS sur la situation choisie, protocole de la maternité, référentiel de la SoFraSimS.</div>
+</div>
+<p>Joignez ces fichiers à la conversation (bouton +). Ne déposez que des documents que vous avez le droit d'utiliser, et jamais de document contenant des données de patients.</p>
+</div>
+
+<div class="etape">
+<h2><span class="num">2.</span> Posez la situation et les compétences</h2>
+<p>Une simulation utile part d'une situation professionnelle emblématique, rattachée au référentiel. Remplacez ce qui est entre crochets.</p>
+<div class="consigne"><span class="quand">Consigne 1</span>Je suis formateur [en IFSI]. Je dois préparer une situation problème métier pour introduire [l'UE 4.4, semestre 2 : Thérapeutiques et contribution au diagnostic médical]. Cette situation problème doit mobiliser au maximum les préconisations précisées dans le référentiel ci-joint. Elle doit se situer en service et permettre à l'apprenant de se projeter dans l'exercice professionnel. Elle doit rendre visibles les enjeux de la qualité de prise en charge pour la santé du patient. Merci de mettre en scène [un infirmier] et de ne pas mentionner l'étudiant. Adresse-toi au lecteur avec un « vous », par exemple « vous êtes [un infirmier] en service… ». <strong>Propose-moi trois situations différentes, A, B et C, en cinq lignes chacune, et indique pour chacune ce qu'elle permet de travailler et sa limite. Je choisirai, puis tu développeras celle que j'aurai retenue.</strong></div>
+<p>Demander un panel plutôt qu'une seule proposition permet d'écarter en quelques secondes ce qui ne convient pas, et de dire pourquoi : « la B, mais en service de médecine ».</p>
+<div class="consigne"><span class="quand">Consigne 2, puis consigne 3</span>À partir du référentiel ci-joint, comment décrire simplement aux étudiants quels sont les savoirs, savoir-faire et savoir-être qui permettront de résoudre cette situation problème avec succès ?<br><br>Peux-tu reformuler ces éléments sous la forme : « Pour réussir à résoudre cette situation problème, vous devrez être capable de… » ?</div>
+</div>
+
+<div class="etape">
+<h2><span class="num">3.</span> Faites lister les étapes et les documents à produire</h2>
+<p>Avant d'écrire quoi que ce soit, on demande à l'IA le plan de travail, tiré du guide de la SoFraSimS. Vous voyez ainsi tout ce qu'une simulation bien préparée demande, et vous gardez la main sur l'ordre.</p>
+<div class="consigne"><span class="quand">Consigne 4, puis consigne 5</span>Je souhaite construire [l'évaluation de cette UE]. La modalité est [un « calcul de doses en situation simulée »]. À partir du guide SoFraSimS, peux-tu m'établir les étapes pour construire un scénario de simulation permettant d'évaluer les compétences précédemment établies ?<br><br>Peux-tu m'établir la liste des étapes à suivre et des documents à produire pour finaliser la préparation de cette simulation ?</div>
+<p>Le référentiel de la SoFraSimS organise un scénario en cinq parties : <strong>contexte</strong>, <strong>objectifs</strong> (3 à 5 au maximum, techniques et non techniques), <strong>préparation</strong> (documents, environnement, matériel, prébriefing), <strong>déroulé</strong> (briefing, états, éléments déclencheurs, comportements attendus, préparation du débriefing) et <strong>qualité</strong> (test et améliorations). Il y ajoute le script du participant simulé, et, en simulation procédurale, les stratégies pédagogiques et la grille d'évaluation du geste.</p>
+</div>
+
+<div class="etape">
+<h2><span class="num">4.</span> Avancez un livrable à la fois, d'un œil critique</h2>
+<p>C'est le cœur de la méthode. Des consignes courtes et une validation à chaque pas : vous contrôlez la qualité au fur et à mesure, et l'IA n'oublie rien en route.</p>
+<div class="consigne"><span class="quand">Consigne 6</span>Nous allons produire chaque livrable un par un. Tu vas me faire une proposition pour le premier livrable. Nous itérerons dessus jusqu'à ce que je te dise « passe au livrable suivant ».</div>
+<div style="break-inside: avoid">
+<p>Pour chaque livrable, la même boucle en quatre temps :</p>
+<table>
+  <tr><th>Temps</th><th>Ce que vous faites</th><th>La consigne</th></tr>
+  <tr><td>1. Lire</td><td>Vous lisez la proposition avec trois questions : est-ce fidèle à mes documents ? adapté au niveau de mes apprenants ? réalisable chez moi ?</td><td>—</td></tr>
+  <tr><td>2. Faire relire</td><td>Vous demandez à l'IA de critiquer son propre travail.</td><td>« Fais une relecture critique de ta proposition et propose des améliorations. »</td></tr>
+  <tr><td>3. Trier</td><td>Vous gardez les améliorations qui vous convainquent, vous écartez les autres, vous ajoutez les vôtres.</td><td>« Implémente ces améliorations. » ou « Implémente seulement la 1 et la 3. »</td></tr>
+  <tr><td>4. Valider</td><td>Vous relisez le livrable corrigé, puis vous passez à la suite.</td><td>« Passe au livrable suivant. »</td></tr>
+</table>
+</div>
+</div>
+
+<div class="etape">
+<h2><span class="num">5.</span> Faites produire les documents de la séance</h2>
+<div class="consigne"><span class="quand">Consignes 7 et 8</span>Est-ce que tu peux créer un dossier patient fictif pour [M. Dupont], présent dans la simulation ?<br><br>Peux-tu spécifier l'ordonnance fictive pour cette simulation ?</div>
+<div class="consigne"><span class="quand">Consigne 9 : la grille d'observation</span>Rédige une grille d'observation adaptée à ce scénario, pour une évaluation formative. Chaque ligne est rattachée à un objectif pédagogique et décrit un comportement observable. 10 lignes au maximum, lignes techniques et non techniques séparées, cotation OUI ou NON, une appréciation globale sur 10, et une mission d'observation à confier aux observateurs.</div>
+<p>Ces critères reprennent ce que demandent la HAS, la SoFraSimS et les standards internationaux : des objectifs qui déterminent les critères d'évaluation, peu d'objectifs, des comportements observables, et des observateurs qui ont une mission.</p>
+</div>
+
+<div class="etape">
+<h2><span class="num">6.</span> Relisez, faites vérifier, testez</h2>
+<div class="consigne"><span class="quand">Consigne 10</span>Relis tout ce que tu viens de produire en le comparant point par point au guide de la SoFraSimS. Cite les 3 écarts les plus importants, du plus gênant au moins gênant, et propose une correction en une phrase pour chacun.</div>
+<ul>
+  <li><strong>Un expert vérifie tout ce qui est clinique :</strong> constantes, doses, évolution du patient, conduite à tenir.</li>
+  <li><strong>On teste le scénario avant de s'en servir</strong> avec des apprenants : c'est indispensable, IA ou pas.</li>
+  <li><strong>On enregistre le résultat</strong> dans un document (copier-coller, ou « génère un document reprenant à l'identique l'ensemble de tes réponses »).</li>
+</ul>
+</div>
+
+<div class="panneau violet">
+  <h3>Sept astuces</h3>
+  <ul>
+    <li><strong>Une consigne à la fois.</strong> Une longue demande donne une réponse moyenne partout ; une série de demandes courtes donne une réponse soignée à chaque pas.</li>
+    <li><strong>Demandez un panel.</strong> « Propose-moi trois versions, A, B et C » : on compare, on écarte vite, on choisit en connaissance de cause.</li>
+    <li><strong>Faites-la se relire avant de corriger vous-même.</strong> Elle trouve seule une bonne part de ses faiblesses.</li>
+    <li><strong>Dites précisément ce qui ne va pas.</strong> « Trop difficile pour des étudiants de 1re année » vaut mieux que « refais ».</li>
+    <li><strong>Demandez la source.</strong> « Sur quel passage de mes documents t'appuies-tu ? » Une référence que vous ne retrouvez pas est à retirer.</li>
+    <li><strong>Repartez de zéro si elle s'embrouille.</strong> Nouvelle conversation, mêmes documents, et vous collez les livrables déjà validés.</li>
+    <li><strong>Gardez une trace.</strong> Copiez chaque livrable validé dans votre document au fur et à mesure.</li>
+  </ul>
+</div>
+
+<div class="panneau cyan">
+  <h3>Trois précautions</h3>
+  <ul>
+    <li><strong>Aucune donnée de patient réel</strong> dans un outil d'IA grand public. Les cas sont fictifs ou anonymisés avant d'être saisis.</li>
+    <li><strong>L'IA produit un premier jet</strong>, pas un scénario fini. Votre nom est sur le scénario, pas le sien.</li>
+    <li><strong>Respectez les règles de votre établissement</strong> sur les outils autorisés.</li>
+  </ul>
+</div>
+
+<div class="pied">
+  <h3>N'oublie Jamais forme vos équipes</h3>
+  <p>Nous formons les formateurs et les équipes pédagogiques : apprendre et former avec les sciences cognitives, et mettre l'IA au service de la réussite des formations.</p>
+  <p>Organisme de formation certifié Qualiopi.</p>
+  <p><a href="https://noubliejamais.fr/ia-pedagogie-formation/">noubliejamais.fr/ia-pedagogie-formation</a> · <a href="https://noubliejamais.fr/rendez-vous/">Prendre rendez-vous</a></p>
+</div>
+
+<p class="sources">Sources : SoFraSimS, « Actualisation 2023 du référentiel 2018 sur l'élaboration de scénarios de simulation en santé » ; Haute Autorité de santé, « Guide de bonnes pratiques en matière de simulation en santé », 2024 ; INACSL, Healthcare Simulation Standards of Best Practice, 2021. Guide remis à l'atelier de N'oublie Jamais, journée de l'ABASS, Beaune, 27 novembre 2026.</p>
+
+</body>
+</html>
