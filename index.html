@@ -367,6 +367,8 @@
       <p class="aide"><strong>Un livrable vous laisse un doute ?</strong> Faites-le relire par l'IA, puis gardez ce qui vous convainc.</p>
       <div class="bloc-consigne" data-consigne="relecture" data-libelle="Copier : « Fais une relecture critique… »"></div>
       <div class="bloc-consigne" data-consigne="implemente" data-libelle="Copier : « Implémente ces améliorations. »"></div>
+      <p class="aide"><strong>Un livrable difficile à lire ?</strong> Demandez une aide visuelle (plan de la salle, frise, tableau, image) : l'IA choisit la forme. Relisez ensuite chaque mot et chaque chiffre du schéma.</p>
+      <div class="bloc-consigne" data-consigne="visuel" data-libelle="Copier : « Ajoute l'aide visuelle… »"></div>
       <button class="fait-btn secondaire" data-fait="3">J'ai validé au moins deux livrables</button>
     </article>
 
@@ -375,6 +377,7 @@
       <p class="aide" id="aide-auto"></p>
       <p class="mot-cle">AUTO</p>
       <p class="aide">Si sa réponse s'arrête en route, écrivez <strong>SUITE</strong>.</p>
+      <div class="bloc-consigne" data-consigne="autoVisuel" data-libelle="Avec des schémas et des images ? Copier « AUTO, avec aides visuelles »" data-secondaire="oui"></div>
       <div class="bloc-consigne" data-consigne="auto" data-libelle="L'IA n'a pas compris ? Copier la consigne complète" data-secondaire="oui"></div>
       <button class="fait-btn secondaire" data-fait="4">C'est fait : j'ai mon scénario</button>
     </article>
@@ -437,6 +440,7 @@
       <div class="bloc-consigne" data-consigne="long6" data-libelle="6. Copier : livrable par livrable"></div>
       <div class="bloc-consigne" data-consigne="relecture" data-libelle="À chaque livrable : « Fais une relecture critique… »"></div>
       <div class="bloc-consigne" data-consigne="implemente" data-libelle="Puis : « Implémente ces améliorations. »"></div>
+      <div class="bloc-consigne" data-consigne="visuel" data-libelle="Si le livrable est difficile à lire : « Ajoute l'aide visuelle… »"></div>
       <div class="bloc-consigne" data-consigne="long7" data-libelle="7. Copier : le dossier patient fictif"></div>
       <div class="bloc-consigne" data-consigne="long8" data-libelle="8. Copier : l'ordonnance fictive"></div>
       <div class="bloc-consigne" data-consigne="long9" data-libelle="9. Copier : tout enregistrer en PDF"></div>
@@ -691,6 +695,17 @@ Cite les 3 écarts les plus importants, du plus gênant au moins gênant, et pro
   implemente: {
     titre: "Appliquer les améliorations",
     texte: `Implémente ces améliorations.`
+  },
+
+  /* Les aides visuelles : la demande doit être dans le message, c'est elle qui déclenche
+     le générateur d'images de Gemini (essais du 27/11/2026). L'IA choisit la forme. */
+  visuel: {
+    titre: "Aide visuelle pour un livrable",
+    texte: `Ajoute à ce livrable l'aide visuelle qui en facilitera le plus la lecture : à toi de choisir la forme (tableau, frise, schéma, plan, image générée) et de décider s'il faut du texte dedans.`
+  },
+  autoVisuel: {
+    titre: "Mode automatique, avec aides visuelles",
+    texte: `AUTO, en ajoutant là où c'est utile les aides visuelles qui facilitent la lecture du scénario : à toi de choisir la forme (tableau, frise, schéma, image générée) et de décider s'il faut du texte dedans.`
   },
 
   /* La version complète (45 min) : les consignes de l'atelier long de N'oublie Jamais. */
@@ -1233,7 +1248,7 @@ function afficherImpression() {
   zone.appendChild(element("h2", "", "Les consignes à donner à l'IA"));
   zone.appendChild(element("p", "mode-emploi",
     "Dans l'ordre : consigne 1 avec le guide joint, consigne 2, puis la commande. Sans fichier : la consigne tout-en-un, puis la commande."));
-  ["guide", "regles", "toutEnUn", "tirage", "relecture", "implemente", "auto", "critique"].forEach(cle => {
+  ["guide", "regles", "toutEnUn", "tirage", "relecture", "implemente", "visuel", "auto", "autoVisuel", "critique"].forEach(cle => {
     const c = CONSIGNES[cle];
     zone.appendChild(element("h2", "", c.titre));
     zone.appendChild(element("div", "consigne-papier",
