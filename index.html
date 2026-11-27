@@ -78,6 +78,9 @@
   }
   p { margin: 0 0 12px; }
   .aide { color: var(--text); font-size: 16px; margin: 6px 0 12px; }
+  .etapes { color: var(--text); font-size: 16px; margin: 0 0 14px; padding-left: 22px; }
+  .etapes li { margin: 6px 0; }
+  .mention { color: var(--nj-navy); background: var(--nj-tint-cyan); border-radius: 4px; padding: 1px 5px; font-weight: 700; white-space: nowrap; }
   .carte {
     background: var(--bg); border-radius: var(--radius-card); padding: 16px; margin: 12px 0;
   }
@@ -324,6 +327,7 @@
       <div class="verrou-tete"><span class="cadenas" aria-hidden="true"></span><h3>1. Rejoindre votre coéquipière</h3></div>
       <div id="voie-preparee">
         <p class="aide" id="aide-outil"></p>
+        <ol class="etapes" id="etapes-outil"></ol>
         <a class="bouton" id="lien-outil" target="_blank" rel="noopener" href="#">Ajouter l'assistant à Gemini</a>
       </div>
       <p class="alerte" id="pas-de-lien">L'assistant préparé n'est pas encore en ligne : utilisez « Partir de zéro » ci-dessous.</p>
@@ -349,7 +353,7 @@
       <div class="cartes" id="cartes"></div>
       <p class="relances" id="relances"></p>
       <div class="bloc-consigne" id="bloc-tirage" data-consigne="tirage" data-libelle="Copier ma commande" data-principal="oui"></div>
-      <p class="aide" id="aide-tirage">Collez la commande dans l'IA et envoyez.</p>
+      <p class="aide" id="aide-tirage"></p>
       <button class="fait-btn secondaire" data-fait="2">C'est fait</button>
     </article>
 
@@ -476,7 +480,15 @@
 
 /* Liens : à renseigner avant l'atelier. Laisser "" tant que le lien n'existe pas. */
 const LIEN_OUTIL = "https://gemini.google.com/customize/skills/d/146PETJT2Gju06li4QJ4zQZ7xXvTWXemk?usp=sharing";   /* compétence Gemini « nj-scenario-simulation » */
-const AIDE_OUTIL = "Notre assistant connaît déjà la méthode du guide de la SoFraSimS. Avec votre compte Google personnel : touchez le bouton, puis « Ajouter une compétence » et « Ajouter ». Ouvrez ensuite une nouvelle discussion dans Gemini : c'est là que vous collerez votre commande.";
+const MENTION_OUTIL = "@nj-scenario-simulation";   /* à écrire dans Gemini pour appeler l'assistant */
+const AIDE_OUTIL = "Notre assistant connaît déjà la méthode du guide de la SoFraSimS. Avec votre compte Google personnel :";
+/* {MENTION} est remplacé par le nom ci-dessus, mis en évidence. */
+const ETAPES_OUTIL = [
+  "Touchez le bouton, puis « Ajouter une compétence » et « Ajouter ».",
+  "Dans Gemini, ouvrez une nouvelle discussion.",
+  "Dans le message, tapez @ et choisissez {MENTION} dans la liste : c'est ce qui appelle l'assistant."
+];
+const AIDE_TIRAGE = "Dans Gemini : vérifiez que {MENTION} est au début de votre message (sinon tapez @ et choisissez-le), collez la commande à la suite et envoyez.";
 const LIEN_IA = "https://gemini.google.com/app";
 const LIEN_GUIDE = "https://www.sofrasims.org/articles/124231-actualisation-2023-du-referentiel-2018";
 
@@ -795,6 +807,10 @@ function afficherTextes() {
   document.getElementById("voie-preparee").hidden = !aLien;
   document.getElementById("pas-de-lien").hidden = aLien;
   document.getElementById("aide-outil").textContent = AIDE_OUTIL;
+  const etapesOutil = document.getElementById("etapes-outil");
+  etapesOutil.textContent = "";
+  ETAPES_OUTIL.forEach(t => etapesOutil.appendChild(avecMention(document.createElement("li"), t)));
+  avecMention(document.getElementById("aide-tirage"), aLien ? AIDE_TIRAGE : "Collez la commande dans l'IA et envoyez.");
   if (aLien) document.getElementById("lien-outil").href = LIEN_OUTIL;
   else document.getElementById("partir-de-zero").open = true;
   document.getElementById("lien-ia").href = LIEN_IA;
@@ -893,6 +909,15 @@ function basculerVerrou(n) {
 /* ---- Tirage : la commande ---- */
 function tirageComplet() {
   return CARTES.every(c => etat.tirage[c.cle]) && !!filiereCourante();
+}
+function avecMention(noeud, texte) {
+  /* Écrit le texte dans le nœud, en mettant en évidence le nom de l'assistant. */
+  noeud.textContent = "";
+  texte.split("{MENTION}").forEach((morceau, i) => {
+    if (i > 0) noeud.appendChild(element("strong", "mention", MENTION_OUTIL));
+    noeud.appendChild(document.createTextNode(morceau));
+  });
+  return noeud;
 }
 function texteTirage() {
   return CARTES.map(c => {
